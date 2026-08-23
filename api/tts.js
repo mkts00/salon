@@ -82,6 +82,20 @@ module.exports = async function handler(req, res) {
 
   const url = new URL(req.url, `https://${req.headers.host || "localhost"}`);
 
+  // 一時的な診断用。値は返さず、変数名と環境の判定だけを返す。
+  if (url.searchParams.get("debug") !== null) {
+    res.setHeader("Cache-Control", "no-store");
+    return sendJson(res, 200, {
+      vercelEnv: process.env.VERCEL_ENV || null,
+      branch: process.env.VERCEL_GIT_COMMIT_REF || null,
+      hasApiKey: Boolean(process.env.FISH_AUDIO_API_KEY),
+      apiKeyLength: (process.env.FISH_AUDIO_API_KEY || "").length,
+      matchingVarNames: Object.keys(process.env)
+        .filter((name) => /fish|audio|tts/i.test(name))
+        .sort(),
+    });
+  }
+
   if (url.searchParams.get("manifest") !== null) {
     res.setHeader("Cache-Control", "public, max-age=60");
     return sendJson(res, 200, {
