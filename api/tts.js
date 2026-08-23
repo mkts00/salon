@@ -99,7 +99,7 @@ module.exports = async function handler(req, res) {
   if (url.searchParams.get("manifest") !== null) {
     res.setHeader("Cache-Control", "public, max-age=60");
     return sendJson(res, 200, {
-      voice: Boolean(process.env.FISH_AUDIO_API_KEY),
+      voice: Boolean((process.env.FISH_AUDIO_API_KEY || "").trim()),
       maxLength: MAX_TEXT_LENGTH,
       samples: Object.entries(SAMPLES).map(([id, sample]) => ({
         id,
@@ -129,7 +129,8 @@ module.exports = async function handler(req, res) {
     return sendJson(res, 400, { error: "missing_text" });
   }
 
-  const apiKey = process.env.FISH_AUDIO_API_KEY;
+  // 貼り付け時に混入しがちな改行・空白を落とす
+  const apiKey = (process.env.FISH_AUDIO_API_KEY || "").trim();
   if (!apiKey) return sendJson(res, 503, { error: "voice_not_configured" });
 
   const clientKey =
@@ -150,7 +151,7 @@ module.exports = async function handler(req, res) {
     latency: "normal",
   };
 
-  const voiceId = process.env.FISH_AUDIO_VOICE_ID;
+  const voiceId = (process.env.FISH_AUDIO_VOICE_ID || "").trim();
   if (voiceId) payload.reference_id = voiceId;
 
   let upstream;
@@ -173,6 +174,11 @@ module.exports = async function handler(req, res) {
   if (!upstream.ok) {
     const detail = await upstream.text().catch(() => "");
     console.error(`Fish Audio responded ${upstream.status}: ${detail.slice(0, 500)}`);
+
+    if (upstream.status === 401 || upstream.status === 403) {
+      return sendJson(res, 502, { error: "invalid_api_key", status: upstream.status });
+    }
+
     return sendJson(res, 502, { error: "upstream_failed", status: upstream.status });
   }
 

@@ -23,6 +23,7 @@ const ERROR_MESSAGES = {
   text_too_long: "文字数が上限を超えています。",
   empty_text: "文章を入力してください。",
   rate_limited: "短時間に多く再生しすぎました。少し待ってからお試しください。",
+  invalid_api_key: "APIキーが無効と判定されました。キーが途中で欠けていないか確認してください。",
   upstream_failed: "音声合成サービスからエラーが返りました。",
   upstream_unreachable: "音声合成サービスに接続できませんでした。",
 };
