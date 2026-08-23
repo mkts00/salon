@@ -41,16 +41,59 @@ Vercelでは以下の設定が `vercel.json` から自動的に適用されま�
 
 GitHubリポジトリをVercelへ連携するか、Vercel CLIからデプロイしてください。
 
+## 音声ガイド（Fish Audio）
+
+画面右下のアバターから、サロン案内を音声で再生できます。音声は
+[Fish Audio](https://fish.audio/) のTTS APIで合成し、再生中は音量に合わせて
+アバターの口が動きます（WebAudioのAnalyserで振幅を取得）。
+
+### 環境変数
+
+`.env.example` をコピーして値を設定し、Vercelでは
+Project Settings → Environment Variables に同じキーを登録してください。
+
+| 変数 | 必須 | 内容 |
+| --- | --- | --- |
+| `FISH_AUDIO_API_KEY` | 必須 | Fish AudioのAPIキー |
+| `FISH_AUDIO_VOICE_ID` | 任意 | 声モデルの `reference_id`。未設定なら既定音声 |
+| `FISH_AUDIO_MODEL` | 任意 | 合成モデル（既定: `s1`） |
+
+APIキーが未設定の場合、パネルには「音声案内は現在準備中です。」と表示され、
+ページのほかの機能には影響しません。
+
+### 読み上げ内容の編集
+
+読み上げるテキストは `api/tts.js` の `SCRIPTS` に定義しています。
+ブラウザからは台本のID（`greeting` など）しか送れないため、公開ページから
+任意の文章を合成されて課金が発生することはありません。台本の追加・修正は
+このオブジェクトを編集するだけで、フロント側の変更は不要です。
+
+合成した音声はCDNに長期キャッシュされるため、同じ台本の再生でAPIが
+繰り返し呼ばれることはありません。**台本を変更したときは、その台本の
+`id` を変えるか、Vercelのキャッシュをパージしてください。**
+
+### ローカルでの確認
+
+`/api/tts` はVercelのサーバーレス関数なので、静的サーバーでは動きません。
+音声まで確認する場合は Vercel CLI を使ってください。
+
+```bash
+vercel dev
+```
+
 ## 主なファイル
 
 ```text
 .
+├── api/
+│   └── tts.js        # Fish Audio TTSプロキシ（サーバーレス関数）
 ├── assets/           # サイト内画像
 ├── scripts/
 │   └── build.mjs     # 検証・ビルド処理
 ├── index.html
 ├── style.css
 ├── script.js
+├── avatar.js         # 音声ガイドのアバター制御
 ├── package.json
 └── vercel.json
 ```

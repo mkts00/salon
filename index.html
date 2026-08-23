@@ -29,7 +29,7 @@
       gtag('config', 'G-LR39JPQ0E6');
     </script>
     <title>Bloomé Body & Wellness｜調布市の女性専用プライベートサロン</title>
-    <link rel="stylesheet" href="style.css?v=23" />
+    <link rel="stylesheet" href="style.css?v=24" />
   </head>
   <body>
     <a class="skip-link" href="#main">本文へ移動</a>
@@ -467,6 +467,67 @@
       <a href="#reservation">初回体験を予約する</a>
     </div>
 
+    <div class="avatar-guide" data-avatar data-state="idle">
+      <div class="avatar-panel" data-avatar-panel>
+        <button class="avatar-close" type="button" data-avatar-close aria-label="音声案内を閉じる">
+          ×
+        </button>
+        <p class="avatar-panel-title">音声でご案内します</p>
+        <ul class="avatar-scripts" data-avatar-scripts></ul>
+        <p class="avatar-caption" data-avatar-caption aria-live="polite"></p>
+      </div>
+
+      <button
+        class="avatar-toggle"
+        type="button"
+        data-avatar-toggle
+        aria-expanded="false"
+        aria-label="音声ガイドを開く"
+      >
+        <span class="avatar-figure" data-avatar-figure aria-hidden="true">
+          <svg viewBox="0 0 240 240" role="img" focusable="false">
+            <circle class="avatar-bg" cx="120" cy="120" r="118" />
+            <g class="avatar-body">
+              <path
+                class="avatar-hair-fill"
+                d="M120 34c40 0 66 27 66 66v62c0 10-8 18-18 18H72c-10 0-18-8-18-18v-62c0-39 26-66 66-66z"
+              />
+              <path
+                class="avatar-shoulders"
+                d="M56 232c8-32 30-50 64-50s56 18 64 50z"
+              />
+              <path class="avatar-neck" d="M102 150h36v34h-36z" />
+              <path
+                class="avatar-face"
+                d="M120 52c26 0 44 20 44 50 0 32-20 56-44 56s-44-24-44-56c0-30 18-50 44-50z"
+              />
+              <path
+                class="avatar-bangs"
+                d="M120 48c26 0 46 18 48 46-18-2-32-12-40-26-10 16-26 26-46 30 2-30 16-50 38-50z"
+              />
+              <path class="avatar-outline" d="M120 34c40 0 66 27 66 66v62" />
+              <path class="avatar-outline" d="M120 34c-40 0-66 27-66 66v62" />
+              <g class="avatar-glasses">
+                <circle cx="100" cy="118" r="21" />
+                <circle cx="146" cy="118" r="21" />
+                <path d="M121 116h4" />
+              </g>
+              <g class="avatar-eyes">
+                <circle cx="100" cy="118" r="8" />
+                <circle cx="146" cy="118" r="8" />
+              </g>
+              <path class="avatar-nose" d="M122 128c-3 4-1 7 2 7" />
+              <path class="avatar-smile" d="M109 143c6 7 16 7 22 0" />
+              <g class="avatar-mouth">
+                <ellipse cx="120" cy="145" rx="12" ry="10" />
+              </g>
+            </g>
+          </svg>
+        </span>
+        <span class="avatar-toggle-label">音声<br />ガイド</span>
+      </button>
+    </div>
+
     <dialog class="reservation-dialog" id="reservation-dialog">
       <div class="dialog-content">
         <button class="dialog-close" type="button" aria-label="予約案内を閉じる">×</button>
@@ -481,5 +542,6 @@
     </dialog>
 
     <script src="script.js?v=21"></script>
+    <script src="avatar.js?v=1"></script>
   </body>
 </html>

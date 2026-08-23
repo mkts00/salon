@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const output = path.join(root, "dist");
-const entryFiles = ["index.html", "style.css", "script.js"];
+const entryFiles = ["index.html", "style.css", "script.js", "avatar.js"];
 const assetDirectories = ["assets"];
 
 function normalizeLocalReference(reference) {

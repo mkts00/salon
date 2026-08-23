@@ -1631,3 +1631,257 @@ body {
     color: var(--brown);
   }
 }
+
+/* ------------------------------------------------------------------
+   Voice guide avatar (Fish Audio)
+   ------------------------------------------------------------------ */
+
+.avatar-guide {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  --mouth: 0;
+}
+
+.avatar-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 18px 8px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--white);
+  box-shadow: 0 14px 30px rgba(77, 53, 44, 0.18);
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.avatar-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px rgba(77, 53, 44, 0.22);
+}
+
+.avatar-toggle-label {
+  font-size: 12px;
+  line-height: 1.35;
+  letter-spacing: 0.08em;
+  color: var(--brown);
+}
+
+.avatar-figure {
+  display: block;
+  width: 54px;
+  height: 54px;
+}
+
+.avatar-figure svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.avatar-bg {
+  fill: var(--cream);
+}
+
+.avatar-hair-fill {
+  fill: #ffd93b;
+}
+
+.avatar-face,
+.avatar-neck,
+.avatar-shoulders {
+  fill: var(--white);
+}
+
+.avatar-bangs {
+  fill: #ffd93b;
+}
+
+.avatar-body path,
+.avatar-body circle,
+.avatar-body ellipse {
+  stroke: #2c2019;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.avatar-hair-fill,
+.avatar-bangs,
+.avatar-neck,
+.avatar-shoulders,
+.avatar-bg {
+  stroke: none;
+}
+
+.avatar-outline,
+.avatar-nose,
+.avatar-smile,
+.avatar-glasses path {
+  fill: none;
+}
+
+.avatar-glasses circle {
+  fill: var(--white);
+}
+
+.avatar-eyes circle {
+  fill: #2c2019;
+  stroke: none;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: avatar-blink 6s infinite;
+}
+
+.avatar-mouth {
+  transform-box: fill-box;
+  transform-origin: center top;
+  transform: scaleY(calc(0.06 + var(--mouth) * 0.94));
+  opacity: clamp(0, calc(var(--mouth) * 5), 1);
+}
+
+.avatar-mouth ellipse {
+  fill: #7d423e;
+  stroke: #2c2019;
+  stroke-width: 5;
+}
+
+.avatar-smile {
+  opacity: clamp(0, calc(1 - var(--mouth) * 5), 1);
+}
+
+@keyframes avatar-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+
+/* WebAudioが使えない場合の口パクフォールバック */
+.avatar-figure.is-talking-fallback {
+  animation: avatar-talk 0.36s steps(2, jump-none) infinite alternate;
+}
+
+@keyframes avatar-talk {
+  from {
+    --mouth: 0.05;
+  }
+  to {
+    --mouth: 0.8;
+  }
+}
+
+.avatar-panel {
+  display: none;
+  width: min(300px, calc(100vw - 40px));
+  padding: 20px 20px 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--white);
+  box-shadow: 0 20px 44px rgba(77, 53, 44, 0.2);
+}
+
+.avatar-guide.is-open .avatar-panel {
+  display: block;
+}
+
+.avatar-close {
+  float: right;
+  margin: -8px -6px 0 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.avatar-panel-title {
+  margin: 0 0 12px;
+  font-family: var(--serif);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  color: var(--brown);
+}
+
+.avatar-scripts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.avatar-scripts button {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--ivory);
+  color: var(--brown);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.avatar-scripts button:hover {
+  border-color: var(--pink);
+  background: var(--cream);
+}
+
+.avatar-scripts button.is-playing {
+  border-color: var(--pink-deep);
+  background: var(--cream);
+  color: var(--pink-deep);
+}
+
+.avatar-caption {
+  margin: 12px 0 0;
+  min-height: 1.9em;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+
+.avatar-guide[data-state="loading"] .avatar-caption::after {
+  content: " …";
+}
+
+@media (max-width: 720px) {
+  .avatar-guide {
+    right: 12px;
+    bottom: 84px;
+  }
+
+  .avatar-toggle-label {
+    display: none;
+  }
+
+  .avatar-toggle {
+    padding: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .avatar-eyes circle,
+  .avatar-figure.is-talking-fallback {
+    animation: none;
+  }
+
+  .avatar-toggle {
+    transition: none;
+  }
+}
