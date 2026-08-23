@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fdfaf3" />
+    <meta name="robots" content="noindex" />
+    <meta
+      name="description"
+      content="Fish AudioのTTS APIで、イラストのアバターに入力した文章を読み上げさせるデモです。"
+    />
+    <title>しゃべるアバター｜Fish Audio TTS デモ</title>
+    <link rel="stylesheet" href="/avatar/avatar.css" />
+  </head>
+  <body>
+    <main class="stage">
+      <header class="stage-header">
+        <p class="eyebrow">FISH AUDIO × WEB AUDIO API</p>
+        <h1>しゃべるアバター</h1>
+        <p class="lead">
+          入力した文章を音声に合成し、音の大きさに合わせて口を動かします。
+        </p>
+      </header>
+
+      <div class="avatar-stage">
+        <span class="avatar-figure" data-avatar-figure aria-hidden="true">
+          <svg viewBox="0 0 240 240" role="img" focusable="false">
+            <circle class="avatar-bg" cx="120" cy="120" r="118" />
+            <g class="avatar-body">
+              <path
+                class="avatar-hair-fill"
+                d="M120 34c40 0 66 27 66 66v62c0 10-8 18-18 18H72c-10 0-18-8-18-18v-62c0-39 26-66 66-66z"
+              />
+              <path class="avatar-shoulders" d="M56 232c8-32 30-50 64-50s56 18 64 50z" />
+              <path class="avatar-neck" d="M102 150h36v34h-36z" />
+              <path
+                class="avatar-face"
+                d="M120 52c26 0 44 20 44 50 0 32-20 56-44 56s-44-24-44-56c0-30 18-50 44-50z"
+              />
+              <path
+                class="avatar-bangs"
+                d="M120 48c26 0 46 18 48 46-18-2-32-12-40-26-10 16-26 26-46 30 2-30 16-50 38-50z"
+              />
+              <path class="avatar-outline" d="M120 34c40 0 66 27 66 66v62" />
+              <path class="avatar-outline" d="M120 34c-40 0-66 27-66 66v62" />
+              <g class="avatar-glasses">
+                <circle cx="100" cy="118" r="21" />
+                <circle cx="146" cy="118" r="21" />
+                <path d="M121 116h4" />
+              </g>
+              <g class="avatar-eyes">
+                <circle cx="100" cy="118" r="8" />
+                <circle cx="146" cy="118" r="8" />
+              </g>
+              <path class="avatar-nose" d="M122 128c-3 4-1 7 2 7" />
+              <path class="avatar-smile" d="M109 143c6 7 16 7 22 0" />
+              <g class="avatar-mouth">
+                <ellipse cx="120" cy="145" rx="12" ry="10" />
+              </g>
+            </g>
+          </svg>
+        </span>
+
+        <p class="avatar-status" data-avatar-status role="status" aria-live="polite">
+          読み込んでいます…
+        </p>
+      </div>
+
+      <section class="controls" aria-labelledby="controls-title">
+        <h2 id="controls-title" class="sr-only">読み上げの操作</h2>
+
+        <div class="samples">
+          <p class="controls-label">サンプルを聞く</p>
+          <ul class="sample-list" data-avatar-samples></ul>
+        </div>
+
+        <form class="composer" data-avatar-form>
+          <label class="controls-label" for="avatar-text">自由に入力して喋らせる</label>
+          <textarea
+            id="avatar-text"
+            data-avatar-text
+            rows="3"
+            maxlength="200"
+            placeholder="ここに文章を入力してください。"
+          ></textarea>
+          <div class="composer-footer">
+            <span class="counter" data-avatar-counter>0 / 200</span>
+            <button class="speak-button" type="submit" data-avatar-speak>
+              喋らせる
+            </button>
+          </div>
+        </form>
+
+        <button class="stop-button" type="button" data-avatar-stop hidden>停止</button>
+      </section>
+
+      <footer class="stage-footer">
+        <p>
+          音声合成: <strong>Fish Audio</strong>／口の動き: Web Audio API の AnalyserNode
+        </p>
+        <p class="note">
+          APIキーはサーバー側の環境変数に保管し、ブラウザには渡していません。
+        </p>
+      </footer>
+    </main>
+
+    <script src="/avatar/avatar.js"></script>
+  </body>
+</html>

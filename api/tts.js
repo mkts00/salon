@@ -3,9 +3,9 @@
 /**
  * Fish Audio TTS proxy.
  *
- * ブラウザからはスクリプトID（`id`）だけを受け取り、読み上げる本文と
- * APIキーはサーバー側に置く。公開LPから任意のテキストを合成できると
- * 従量課金を第三者に使われるため、読み上げ内容はこのカタログに限定する。
+ * APIキーはこのサーバー側だけに置き、ブラウザには渡さない。
+ * 公開URLから無制限に合成できると従量課金を第三者に使われるため、
+ * 文字数の上限とIPごとの回数制限をかけている。
  *
  * 環境変数
  * - FISH_AUDIO_API_KEY  必須。Fish AudioのAPIキー。
@@ -15,24 +15,58 @@
 
 const FISH_AUDIO_ENDPOINT = "https://api.fish.audio/v1/tts";
 
-const SCRIPTS = {
+const MAX_TEXT_LENGTH = 200;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 12;
+
+const SAMPLES = {
   greeting: {
-    label: "サロンのご紹介",
-    text: "Bloomé Body & Wellnessへようこそ。調布市の女性専用、完全予約制のプライベートサロンです。小顔、痩身、肩こり、姿勢のお悩みに、顔と身体を分けずに全身から向き合います。",
+    label: "あいさつ",
+    text: "こんにちは。私はイラストのアバターです。入力した文章を、そのまま声にして読み上げます。",
   },
-  method: {
-    label: "独自メソッドについて",
-    text: "当サロンは、皮膚のねじれに着目した独自の技術で施術を行います。強く押して終わるのではなく、皮膚の動きから今の状態を読み取り、その方に合う方法を丁寧に組み立てていきます。",
+  weather: {
+    label: "今日の天気",
+    text: "今日はよく晴れています。日中は少し暑くなりそうなので、こまめに水分をとってお過ごしください。",
   },
-  firstvisit: {
-    label: "初回体験の流れ",
-    text: "初回体験では、はじめにお悩みと体調を伺い、施術内容をご説明します。オーナーの小林が最初から最後まで一対一で担当し、施術のあとはご自宅での過ごし方までお伝えします。",
+  tongue: {
+    label: "早口ことば",
+    text: "生麦、生米、生卵。隣の客はよく柿食う客だ。東京特許許可局。",
   },
-  reservation: {
-    label: "ご予約について",
-    text: "施術は完全予約制です。無理な勧誘や押し売りは行いませんので、何から相談すればよいか分からない方も、どうぞ気負わずお越しください。ご予約はページ内のボタンからお進みください。",
+  intro: {
+    label: "しくみの説明",
+    text: "この声は、フィッシュオーディオという音声合成のサービスで作っています。音の大きさに合わせて、口の開き方を変えています。",
   },
 };
+
+// サーバーレス関数のインスタンスごとの簡易レートリミット。
+// 完全ではないが、1つのブラウザからの連打を止めるには十分。
+const requestLog = new Map();
+
+function isRateLimited(key) {
+  const now = Date.now();
+  const recent = (requestLog.get(key) || []).filter(
+    (time) => now - time < RATE_LIMIT_WINDOW_MS
+  );
+
+  if (recent.length >= RATE_LIMIT_MAX_REQUESTS) {
+    requestLog.set(key, recent);
+    return true;
+  }
+
+  recent.push(now);
+  requestLog.set(key, recent);
+
+  // 古いエントリが溜まり続けないように、たまに掃除する。
+  if (requestLog.size > 500) {
+    for (const [loggedKey, times] of requestLog) {
+      if (times.every((time) => now - time >= RATE_LIMIT_WINDOW_MS)) {
+        requestLog.delete(loggedKey);
+      }
+    }
+  }
+
+  return false;
+}
 
 function sendJson(res, status, body) {
   res.statusCode = status;
@@ -48,34 +82,54 @@ module.exports = async function handler(req, res) {
 
   const url = new URL(req.url, `https://${req.headers.host || "localhost"}`);
 
-  // 音声ボタンの一覧と字幕テキストはここから配信する（本文の二重管理を避ける）。
   if (url.searchParams.get("manifest") !== null) {
-    res.setHeader("Cache-Control", "public, max-age=300, s-maxage=86400");
+    res.setHeader("Cache-Control", "public, max-age=60");
     return sendJson(res, 200, {
       voice: Boolean(process.env.FISH_AUDIO_API_KEY),
-      scripts: Object.entries(SCRIPTS).map(([id, script]) => ({
+      maxLength: MAX_TEXT_LENGTH,
+      samples: Object.entries(SAMPLES).map(([id, sample]) => ({
         id,
-        label: script.label,
-        text: script.text,
+        label: sample.label,
+        text: sample.text,
       })),
     });
   }
 
   const id = url.searchParams.get("id");
-  const script = Object.prototype.hasOwnProperty.call(SCRIPTS, id) ? SCRIPTS[id] : null;
+  const freeText = url.searchParams.get("text");
+  let text = null;
+  let cacheable = false;
 
-  if (!script) {
-    return sendJson(res, 400, { error: "unknown_script_id" });
+  if (id !== null) {
+    const sample = Object.prototype.hasOwnProperty.call(SAMPLES, id) ? SAMPLES[id] : null;
+    if (!sample) return sendJson(res, 400, { error: "unknown_sample_id" });
+    text = sample.text;
+    cacheable = true;
+  } else if (freeText !== null) {
+    text = freeText.trim();
+    if (!text) return sendJson(res, 400, { error: "empty_text" });
+    if (text.length > MAX_TEXT_LENGTH) {
+      return sendJson(res, 413, { error: "text_too_long", maxLength: MAX_TEXT_LENGTH });
+    }
+  } else {
+    return sendJson(res, 400, { error: "missing_text" });
   }
 
   const apiKey = process.env.FISH_AUDIO_API_KEY;
+  if (!apiKey) return sendJson(res, 503, { error: "voice_not_configured" });
 
-  if (!apiKey) {
-    return sendJson(res, 503, { error: "voice_not_configured" });
+  const clientKey =
+    (req.headers["x-forwarded-for"] || "").split(",")[0].trim() ||
+    req.socket?.remoteAddress ||
+    "unknown";
+
+  if (isRateLimited(clientKey)) {
+    res.setHeader("Retry-After", "60");
+    return sendJson(res, 429, { error: "rate_limited" });
   }
 
   const payload = {
-    text: script.text,
+    text,
     format: "mp3",
     mp3_bitrate: 128,
     normalize: true,
@@ -110,10 +164,16 @@ module.exports = async function handler(req, res) {
 
   const audio = Buffer.from(await upstream.arrayBuffer());
 
-  // 台詞は固定なのでCDNに長期キャッシュさせ、再生のたびに課金されないようにする。
   res.statusCode = 200;
   res.setHeader("Content-Type", "audio/mpeg");
   res.setHeader("Content-Length", String(audio.length));
-  res.setHeader("Cache-Control", "public, max-age=3600, s-maxage=31536000, immutable");
+  // 固定の台本はURLが変わらないのでCDNに長期キャッシュさせる。
+  // 自由入力も同じ文章ならCDNヒットするが、短めの期限にしておく。
+  res.setHeader(
+    "Cache-Control",
+    cacheable
+      ? "public, max-age=3600, s-maxage=31536000, immutable"
+      : "public, max-age=600, s-maxage=86400"
+  );
   res.end(req.method === "HEAD" ? undefined : audio);
 };

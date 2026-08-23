@@ -41,16 +41,20 @@ Vercelでは以下の設定が `vercel.json` から自動的に適用されま�
 
 GitHubリポジトリをVercelへ連携するか、Vercel CLIからデプロイしてください。
 
-## 音声ガイド（Fish Audio）
+## しゃべるアバター（Fish Audio）
 
-画面右下のアバターから、サロン案内を音声で再生できます。音声は
-[Fish Audio](https://fish.audio/) のTTS APIで合成し、再生中は音量に合わせて
-アバターの口が動きます（WebAudioのAnalyserで振幅を取得）。
+`/avatar` は、入力した文章を音声に合成してイラストのアバターに読み上げさせる
+単体ページです。LP本体とは独立しており、LPからは参照していません。
+
+- 音声合成: [Fish Audio](https://fish.audio/) の TTS API
+- 口の動き: Web Audio API の AnalyserNode で音量を取得し、口の開き方に反映
+- サンプル台本のボタンと、200文字までの自由入力の両方に対応
 
 ### 環境変数
 
 `.env.example` をコピーして値を設定し、Vercelでは
 Project Settings → Environment Variables に同じキーを登録してください。
+**Production と Preview の両方**に設定し、追加後は再デプロイが必要です。
 
 | 変数 | 必須 | 内容 |
 | --- | --- | --- |
@@ -58,19 +62,19 @@ Project Settings → Environment Variables に同じキーを登録してくだ�
 | `FISH_AUDIO_VOICE_ID` | 任意 | 声モデルの `reference_id`。未設定なら既定音声 |
 | `FISH_AUDIO_MODEL` | 任意 | 合成モデル（既定: `s1`） |
 
-APIキーが未設定の場合、パネルには「音声案内は現在準備中です。」と表示され、
-ページのほかの機能には影響しません。
+APIキーが未設定でもページは表示され、その旨のメッセージが出るだけです。
 
-### 読み上げ内容の編集
+### 課金の暴走を防ぐしくみ
 
-読み上げるテキストは `api/tts.js` の `SCRIPTS` に定義しています。
-ブラウザからは台本のID（`greeting` など）しか送れないため、公開ページから
-任意の文章を合成されて課金が発生することはありません。台本の追加・修正は
-このオブジェクトを編集するだけで、フロント側の変更は不要です。
+公開URLから無制限に合成できると、従量課金を第三者に使われます。
+`api/tts.js` で次の制限をかけています。
 
-合成した音声はCDNに長期キャッシュされるため、同じ台本の再生でAPIが
-繰り返し呼ばれることはありません。**台本を変更したときは、その台本の
-`id` を変えるか、Vercelのキャッシュをパージしてください。**
+- 文字数は200文字まで（`MAX_TEXT_LENGTH`）
+- 同一IPからの合成は1分あたり12回まで（超過すると429）
+- APIキーはサーバー側の環境変数のみに置き、ブラウザには渡さない
+- 同じ文章はCDNにキャッシュされ、再生のたびにAPIを呼ばない
+
+サンプル台本の文面は `api/tts.js` の `SAMPLES` で編集できます。
 
 ### ローカルでの確認
 
@@ -87,7 +91,13 @@ vercel dev
 .
 ├── api/
 │   └── tts.js        # Fish Audio TTSプロキシ（サーバーレス関数）
+├── api/
+│   └── tts.js        # Fish Audio TTSプロキシ（サーバーレス関数）
 ├── assets/           # サイト内画像
+├── avatar/           # しゃべるアバター（単体ページ）
+│   ├── index.html
+│   ├── avatar.css
+│   └── avatar.js
 ├── scripts/
 │   └── build.mjs     # 検証・ビルド処理
 ├── index.html
