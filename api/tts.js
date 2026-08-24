@@ -15,6 +15,10 @@
 
 const FISH_AUDIO_ENDPOINT = "https://api.fish.audio/v1/tts";
 
+// APIクレジット不要で使える無料モデル。有料モデルを使う場合は
+// 環境変数 FISH_AUDIO_MODEL で上書きする。
+const DEFAULT_MODEL = "s2.1-pro-free";
+
 const MAX_TEXT_LENGTH = 200;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 12;
@@ -89,19 +93,19 @@ module.exports = async function handler(req, res) {
 
     const probes = [
       {
-        name: "bearer + model:s1",
+        name: `model:${DEFAULT_MODEL} (無料)`,
+        url: FISH_AUDIO_ENDPOINT,
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", model: DEFAULT_MODEL },
+      },
+      {
+        name: "model:s2.1-pro (有料)",
+        url: FISH_AUDIO_ENDPOINT,
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", model: "s2.1-pro" },
+      },
+      {
+        name: "model:s1 (有料)",
         url: FISH_AUDIO_ENDPOINT,
         headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", model: "s1" },
-      },
-      {
-        name: "bearer, model なし",
-        url: FISH_AUDIO_ENDPOINT,
-        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      },
-      {
-        name: "Bearer なし",
-        url: FISH_AUDIO_ENDPOINT,
-        headers: { Authorization: key, "Content-Type": "application/json" },
       },
       {
         name: "残高照会 (GET)",
@@ -205,7 +209,7 @@ module.exports = async function handler(req, res) {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        model: process.env.FISH_AUDIO_MODEL || "s1",
+        model: (process.env.FISH_AUDIO_MODEL || "").trim() || DEFAULT_MODEL,
       },
       body: JSON.stringify(payload),
     });
@@ -220,6 +224,10 @@ module.exports = async function handler(req, res) {
 
     if (upstream.status === 401 || upstream.status === 403) {
       return sendJson(res, 502, { error: "invalid_api_key", status: upstream.status });
+    }
+
+    if (upstream.status === 402) {
+      return sendJson(res, 502, { error: "insufficient_credit", status: upstream.status });
     }
 
     return sendJson(res, 502, { error: "upstream_failed", status: upstream.status });

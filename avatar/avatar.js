@@ -24,6 +24,7 @@ const ERROR_MESSAGES = {
   empty_text: "文章を入力してください。",
   rate_limited: "短時間に多く再生しすぎました。少し待ってからお試しください。",
   invalid_api_key: "APIキーが無効と判定されました。キーが途中で欠けていないか確認してください。",
+  insufficient_credit: "Fish Audio の API クレジットが不足しています。",
   upstream_failed: "音声合成サービスからエラーが返りました。",
   upstream_unreachable: "音声合成サービスに接続できませんでした。",
 };
