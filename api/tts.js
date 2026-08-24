@@ -82,17 +82,60 @@ module.exports = async function handler(req, res) {
 
   const url = new URL(req.url, `https://${req.headers.host || "localhost"}`);
 
-  // 一時的な診断用。値は返さず、変数名と環境の判定だけを返す。
+  // 一時的な診断用。キーの値は返さず、認証パターンごとの応答だけを返す。
   if (url.searchParams.get("debug") !== null) {
+    const key = (process.env.FISH_AUDIO_API_KEY || "").trim();
+    const body = JSON.stringify({ text: "テスト", format: "mp3" });
+
+    const probes = [
+      {
+        name: "bearer + model:s1",
+        url: FISH_AUDIO_ENDPOINT,
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", model: "s1" },
+      },
+      {
+        name: "bearer, model なし",
+        url: FISH_AUDIO_ENDPOINT,
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      },
+      {
+        name: "Bearer なし",
+        url: FISH_AUDIO_ENDPOINT,
+        headers: { Authorization: key, "Content-Type": "application/json" },
+      },
+      {
+        name: "残高照会 (GET)",
+        url: "https://api.fish.audio/wallet/self/api-credit",
+        method: "GET",
+        headers: { Authorization: `Bearer ${key}` },
+      },
+    ];
+
+    const results = [];
+
+    for (const probe of probes) {
+      try {
+        const response = await fetch(probe.url, {
+          method: probe.method || "POST",
+          headers: probe.headers,
+          body: probe.method === "GET" ? undefined : body,
+        });
+        const contentType = response.headers.get("content-type") || "";
+        const preview = contentType.startsWith("audio/")
+          ? "(audio)"
+          : (await response.text().catch(() => "")).slice(0, 160);
+        results.push({ probe: probe.name, status: response.status, preview });
+      } catch (error) {
+        results.push({ probe: probe.name, status: "fetch_failed", preview: String(error).slice(0, 160) });
+      }
+    }
+
     res.setHeader("Cache-Control", "no-store");
     return sendJson(res, 200, {
       vercelEnv: process.env.VERCEL_ENV || null,
-      branch: process.env.VERCEL_GIT_COMMIT_REF || null,
-      hasApiKey: Boolean(process.env.FISH_AUDIO_API_KEY),
-      apiKeyLength: (process.env.FISH_AUDIO_API_KEY || "").length,
-      matchingVarNames: Object.keys(process.env)
-        .filter((name) => /fish|audio|tts/i.test(name))
-        .sort(),
+      keyLength: key.length,
+      keyPrefix: key.slice(0, 3),
+      results,
     });
   }
 
