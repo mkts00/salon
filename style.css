@@ -1613,6 +1613,7 @@ body {
   .concerns,
   .cause,
   .method,
+  .movie,
   .flow,
   .before-after,
   .voices,
@@ -1629,5 +1630,103 @@ body {
     border-color: var(--brown);
     background: transparent;
     color: var(--brown);
+  }
+}
+
+/* Movie section */
+.movie {
+  background: var(--ivory);
+}
+
+.movie-frame {
+  position: relative;
+  margin-top: 52px;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--line);
+  background: linear-gradient(135deg, var(--cream), var(--beige));
+}
+
+.movie-player {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.movie-cover {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: clamp(22px, 4vw, 40px);
+  background:
+    radial-gradient(130% 120% at 50% 0%, rgba(252, 251, 247, 0.55), transparent 62%),
+    linear-gradient(135deg, var(--cream), var(--beige));
+  color: var(--brown);
+}
+
+.movie-cover-logo {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.6rem, 5vw, 2.7rem);
+  letter-spacing: 0.04em;
+}
+
+.movie-cover-text {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.movie-play {
+  position: relative;
+  display: flex;
+  width: 76px;
+  height: 76px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(252, 251, 247, 0.92);
+  color: var(--pink-deep);
+  box-shadow: 0 16px 36px rgba(40, 37, 34, 0.22);
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.movie-play svg {
+  margin-left: 4px;
+}
+
+.movie-player:hover .movie-play,
+.movie-player:focus-visible .movie-play {
+  background: var(--white);
+  transform: scale(1.08);
+}
+
+.movie-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.movie-admin-note {
+  margin-top: 18px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .movie-play {
+    transition: none;
   }
 }
