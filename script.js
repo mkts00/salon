@@ -50,7 +50,8 @@ moviePlayer?.addEventListener("click", () => {
   const videoId = (moviePlayer.dataset.videoId || "").trim();
 
   if (!/^[\w-]{11}$/.test(videoId)) {
-    window.alert("紹介動画は現在準備中です。");
+    const channelUrl = (moviePlayer.dataset.channelUrl || "").trim();
+    if (channelUrl) window.open(channelUrl, "_blank", "noopener");
     return;
   }
 
